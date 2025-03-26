@@ -77,9 +77,9 @@ uint8_t usart_send_data(USART_OBJ_T * const usartObj);
  * @brief   USART发送中断处理
  * @param   usartObj:   USART对象
  * @retval  None
- * @note    只能在USART中断服务函数中调用
+ * @note    只能在发送DMA中断服务函数中调用
 */
-void usart_tx_irq_handler(USART_OBJ_T * const usartObj);
+void usart_tx_dma_irq_handler(USART_OBJ_T * const usartObj);
 
 
 /**

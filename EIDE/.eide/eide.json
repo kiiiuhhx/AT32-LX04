@@ -278,6 +278,27 @@
         "folders": []
       },
       {
+        "name": "Module_RS485",
+        "files": [
+          {
+            "path": "../User/RS485/inc/rs485_macros.h"
+          },
+          {
+            "path": "../User/RS485/src/rs485_init.c"
+          },
+          {
+            "path": "../User/RS485/src/rs485_interface.c"
+          },
+          {
+            "path": "../User/RS485/src/rs485_task.c"
+          },
+          {
+            "path": "../User/RS485/src/rs485_user.c"
+          }
+        ],
+        "folders": []
+      },
+      {
         "name": "Module_Servo",
         "files": [
           {

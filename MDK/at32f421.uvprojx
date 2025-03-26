@@ -770,6 +770,36 @@
           </Files>
         </Group>
         <Group>
+          <GroupName>Module_RS485</GroupName>
+          <Files>
+            <File>
+              <FileName>rs485_macros.h</FileName>
+              <FileType>5</FileType>
+              <FilePath>..\User\RS485\inc\rs485_macros.h</FilePath>
+            </File>
+            <File>
+              <FileName>rs485_init.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\User\RS485\src\rs485_init.c</FilePath>
+            </File>
+            <File>
+              <FileName>rs485_interface.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\User\RS485\src\rs485_interface.c</FilePath>
+            </File>
+            <File>
+              <FileName>rs485_task.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\User\RS485\src\rs485_task.c</FilePath>
+            </File>
+            <File>
+              <FileName>rs485_user.c</FileName>
+              <FileType>1</FileType>
+              <FilePath>..\User\RS485\src\rs485_user.c</FilePath>
+            </File>
+          </Files>
+        </Group>
+        <Group>
           <GroupName>Module_Servo</GroupName>
           <Files>
             <File>

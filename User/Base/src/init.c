@@ -13,6 +13,7 @@
 #include "./LCD/inc/lcd_init.h"
 #include "./LED/inc/led_init.h"
 #include "./PWM/inc/pwm_init.h"
+#include "./RS485/inc/rs485_init.h"
 #include "./Servo/inc/servo_init.h"
 #include "./USART/inc/usart_init.h"
 #include "./WS2812/inc/ws2812_init.h"
@@ -23,6 +24,7 @@
 #include "./LCD/inc/lcd_task.h"
 #include "./LED/inc/led_task.h"
 #include "./PWM/inc/pwm_task.h"
+#include "./RS485/inc/rs485_task.h"
 #include "./Servo/inc/servo_task.h"
 #include "./USART/inc/usart_task.h"
 #include "./WS2812/inc/ws2812_task.h"
@@ -54,6 +56,7 @@ void system_init(void)
     crm_periph_clock_enable(CRM_TMR15_PERIPH_CLOCK, TRUE);
     crm_periph_clock_enable(CRM_TMR17_PERIPH_CLOCK, TRUE);
     crm_periph_clock_enable(CRM_USART1_PERIPH_CLOCK, TRUE);
+    crm_periph_clock_enable(CRM_USART2_PERIPH_CLOCK, TRUE);
     
     adc_init((uint32_t)adcObj.rawData);
     beep_init();
@@ -61,6 +64,7 @@ void system_init(void)
     lcd_init();
     led_init();
     pwm_init();
+    rs485_init((uint32_t)rs485Obj.txBuffer, (uint32_t)rs485Obj.rxBuffer);
     servo_init();
     usart_config_init((uint32_t)usartObj.txBuffer, (uint32_t)usartObj.rxBuffer);
     ws2812_init();
@@ -81,6 +85,7 @@ void init_task(void *arg)
     xTaskCreate(lcd_task, "lcd_task", 128, NULL, 6, &lcdTaskHandle);
     xTaskCreate(led_task, "led_task", 64, NULL, 4, &ledTaskHandle);
     xTaskCreate(pwm_task, "pwm_task", 64, NULL, 3, &pwmTaskHandle);
+    xTaskCreate(rs485_task, "rs485_task", 64, NULL, 6, &rs485TaskHandle);
     xTaskCreate(servo_task, "servo_task", 64, NULL, 4, &servoTaskHandle);
     xTaskCreate(usart_task, "usart_task", 64, NULL, 6, &usartTaskHandle);
     xTaskCreate(ws2812_task, "ws2812_task", 64, NULL, 2, &ws2812TaskHandle);

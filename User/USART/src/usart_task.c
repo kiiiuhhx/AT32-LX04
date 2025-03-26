@@ -36,7 +36,7 @@ void usart_task(void *arg)
         
         usartTaskStackHighWaterMark = uxTaskGetStackHighWaterMark(NULL);
         
-        vTaskDelay(10);
+        vTaskDelay(50);
     }
 }
 
@@ -51,7 +51,7 @@ void USART_TX_DMA_IRQ_HANDLER(void)
 {
     if(dma_flag_get(USART_TX_DMA_FDT_FLAG))
     {
-        usart_tx_irq_handler(&usartObj);
+        usart_tx_dma_irq_handler(&usartObj);
         
         dma_flag_clear(USART_TX_DMA_FDT_FLAG);
     }

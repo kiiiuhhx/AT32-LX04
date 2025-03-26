@@ -4,6 +4,19 @@
             "path": "."
         }
     ],
-    "settings": {},
+    "settings": {
+        "files.associations": {
+            "rs485_init.h": "c",
+            "rs485_interface.h": "c",
+            "usart_interface.h": "c",
+            "rs485_macros.h": "c",
+            "rs485_user.h": "c",
+            "rs485_task.h": "c",
+            "at32f421_conf.h": "c",
+            "at32f421_dma.h": "c",
+            "freertos.h": "c",
+            "task.h": "c"
+        }
+    },
     "extensions": {}
 }
