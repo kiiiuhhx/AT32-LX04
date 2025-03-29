@@ -22,6 +22,7 @@ typedef enum LCD_DIR_T
 typedef enum LCD_EN_FONT_SIZE_T
 {
     LCD_EN_FONT_SIZE_8X16 = 0,
+    LCD_EN_FONT_SIZE_16X16,
     LCD_EN_FONT_SIZE_16X24,
     LCD_EN_FONT_SIZE_16X32,
     LCD_EN_FONT_SIZE_24X32,
@@ -48,6 +49,7 @@ typedef struct LCD_GPIO_OBJ_T
 typedef struct LCD_OBJ_T
 {
     LCD_GPIO_OBJ_T *gpioObj;
+    spi_type *spi;
     SemaphoreHandle_t updateSemaphoreHandle;
     uint16_t width;
     uint16_t height;
@@ -80,12 +82,16 @@ void lcd_gpio_obj_init(LCD_GPIO_OBJ_T * const lcdGpioObj, gpio_type * const mosi
 
 /**
  * @brief   LCD对象初始化
- * @param   lcdObj: LCD对象
- * @param   byte:   要发送的字节
+ * @param   lcdObj:     LCD对象
+ * @param   gpioObj:    LCD GPIO对象
+ * @param   spi:        SPI外设
+ * @param   width:      LCD屏幕宽度
+ * @param   height:     LCD屏幕高度
+ * @param   dir:        LCD显示方向
  * @retval  None
  * @note    None
 */
-void lcd_obj_init(LCD_OBJ_T * const lcdObj, LCD_GPIO_OBJ_T * const gpioObj, const uint8_t width, const uint8_t height, const LCD_DIR_T dir);
+void lcd_obj_init(LCD_OBJ_T * const lcdObj, LCD_GPIO_OBJ_T * const gpioObj, spi_type * const spi, const uint8_t width, const uint8_t height, const LCD_DIR_T dir);
 
 
 /**
@@ -165,11 +171,11 @@ void lcd_show_str(LCD_OBJ_T * const lcdObj, const uint16_t x, const uint16_t y, 
 
 
 /**
- * @brief   LCD显示数字
+ * @brief   LCD显示整数
  * @param   lcdObj:     LCD对象
  * @param   x:          横坐标
  * @param   y:          纵坐标
- * @param   num:        要显示的数字
+ * @param   integer:    要显示的整数
  * @param   format:     显示格式
  * @param   fontSize:   字体大小
  * @param   fontSorce:  字库
@@ -178,8 +184,26 @@ void lcd_show_str(LCD_OBJ_T * const lcdObj, const uint16_t x, const uint16_t y, 
  * @retval  None
  * @note    None
 */
-void lcd_show_num(LCD_OBJ_T * const lcdObj, const uint16_t x, const uint16_t y, const uint32_t num, const char * const format, const LCD_EN_FONT_SIZE_T fontSize,
-    const uint8_t * const fontSorce, const uint16_t fColor, const uint16_t bColor);
+void lcd_show_integer(LCD_OBJ_T * const lcdObj, const uint16_t x, const uint16_t y, const uint32_t integer, const char * const format,
+    const LCD_EN_FONT_SIZE_T fontSize, const uint8_t * const fontSorce, const uint16_t fColor, const uint16_t bColor);
+
+
+/**
+ * @brief   LCD显示浮点数
+ * @param   lcdObj:     LCD对象
+ * @param   x:          横坐标
+ * @param   y:          纵坐标
+ * @param   floatNum:   要显示的浮点数
+ * @param   format:     显示格式
+ * @param   fontSize:   字体大小
+ * @param   fontSorce:  字库
+ * @param   fColor:     字体颜色
+ * @param   bColor:     背景颜色
+ * @retval  None
+ * @note    None
+*/
+void lcd_show_float(LCD_OBJ_T * const lcdObj, const uint16_t x, const uint16_t y, const double floatNum, const char * const format,
+    const LCD_EN_FONT_SIZE_T fontSize, const uint8_t * const fontSorce, const uint16_t fColor, const uint16_t bColor);
 
 
 /**

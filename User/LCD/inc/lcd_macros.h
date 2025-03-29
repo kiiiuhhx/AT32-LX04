@@ -9,9 +9,13 @@
 
 #define LCD_MOSI_GPIO_PORT                  GPIOB
 #define LCD_MOSI_GPIO_PIN                   GPIO_PINS_5
+#define LCD_MOSI_GPIO_MUX_PIN_SOURCE        GPIO_PINS_SOURCE5
+#define LCD_MOSI_GPIO_MUX                   GPIO_MUX_0
 
 #define LCD_SCK_GPIO_PORT                   GPIOB
 #define LCD_SCK_GPIO_PIN                    GPIO_PINS_3
+#define LCD_SCK_GPIO_MUX_PIN_SOURCE         GPIO_PINS_SOURCE3
+#define LCD_SCK_GPIO_MUX                    GPIO_MUX_0
 
 #define LCD_CS_GPIO_PORT                    GPIOA
 #define LCD_CS_GPIO_PIN                     GPIO_PINS_15
@@ -24,6 +28,9 @@
 
 #define LCD_BLK_GPIO_PORT                   GPIOB
 #define LCD_BLK_GPIO_PIN                    GPIO_PINS_7
+
+
+#define LCD_SPI                             SPI1
 
 
 #define LCD_WIDTH                           (160)

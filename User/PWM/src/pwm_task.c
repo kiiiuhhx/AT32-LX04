@@ -21,7 +21,7 @@ void pwm_task(void *arg)
     //PWM对象初始化
     pwm_obj_init(&pwmObj, PWM_TMR, PWM_TMR_CHANNEL);
     
-    pwm_set_freq(&pwmObj, 10000);
+    pwm_set_freq(&pwmObj, 100);
     pwm_set_duty(&pwmObj, 50);
     
     pwm_freq_duty_update(&pwmObj);

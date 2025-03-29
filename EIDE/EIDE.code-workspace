@@ -15,7 +15,10 @@
             "at32f421_conf.h": "c",
             "at32f421_dma.h": "c",
             "freertos.h": "c",
-            "task.h": "c"
+            "task.h": "c",
+            "lcd_font.h": "c",
+            "lcd_interface.h": "c",
+            "lcd_picture.h": "c"
         }
     },
     "extensions": {}

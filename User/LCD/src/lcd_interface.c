@@ -53,17 +53,22 @@ void lcd_gpio_obj_init(LCD_GPIO_OBJ_T * const lcdGpioObj, gpio_type * const mosi
 
 /**
  * @brief   LCD对象初始化
- * @param   lcdObj: LCD对象
- * @param   byte:   要发送的字节
+ * @param   lcdObj:     LCD对象
+ * @param   gpioObj:    LCD GPIO对象
+ * @param   spi:        SPI外设
+ * @param   width:      LCD屏幕宽度
+ * @param   height:     LCD屏幕高度
+ * @param   dir:        LCD显示方向
  * @retval  None
  * @note    None
 */
-void lcd_obj_init(LCD_OBJ_T * const lcdObj, LCD_GPIO_OBJ_T * const gpioObj, const uint8_t width, const uint8_t height, const LCD_DIR_T dir)
+void lcd_obj_init(LCD_OBJ_T * const lcdObj, LCD_GPIO_OBJ_T * const gpioObj, spi_type * const spi, const uint8_t width, const uint8_t height, const LCD_DIR_T dir)
 {
-    if(lcdObj == NULL || gpioObj == NULL)
+    if(lcdObj == NULL || gpioObj == NULL || spi == NULL)
         return;
     
     lcdObj->gpioObj               = gpioObj;
+    lcdObj->spi                   = spi;
     lcdObj->updateSemaphoreHandle = xSemaphoreCreateBinary();
     lcdObj->width                 = width;
     lcdObj->height                = height;
@@ -83,66 +88,6 @@ static void lcd_delay_ms(const uint16_t ms)
         return;
     
     vTaskDelay(ms);
-}
-
-
-/**
- * @brief   LCD MOSI高电平
- * @param   lcdObj: LCD对象
- * @retval  None
- * @note    静态
-*/
-static void lcd_mosi_high(LCD_OBJ_T * const lcdObj)
-{
-    if(lcdObj == NULL || lcdObj->gpioObj == NULL)
-        return;
-    
-    gpio_bits_set(lcdObj->gpioObj->mosiPort, lcdObj->gpioObj->mosiPin);
-}
-
-
-/**
- * @brief   LCD MOSI低电平
- * @param   lcdObj: LCD对象
- * @retval  None
- * @note    静态
-*/
-static void lcd_mosi_low(LCD_OBJ_T * const lcdObj)
-{
-    if(lcdObj == NULL || lcdObj->gpioObj == NULL)
-        return;
-    
-    gpio_bits_reset(lcdObj->gpioObj->mosiPort, lcdObj->gpioObj->mosiPin);
-}
-
-
-/**
- * @brief   LCD SCK高电平
- * @param   lcdObj: LCD对象
- * @retval  None
- * @note    静态
-*/
-static void lcd_sck_high(LCD_OBJ_T * const lcdObj)
-{
-    if(lcdObj == NULL || lcdObj->gpioObj == NULL)
-        return;
-    
-    gpio_bits_set(lcdObj->gpioObj->sckPort, lcdObj->gpioObj->sckPin);
-}
-
-
-/**
- * @brief   LCD SCK低电平
- * @param   lcdObj: LCD对象
- * @retval  None
- * @note    静态
-*/
-static void lcd_sck_low(LCD_OBJ_T * const lcdObj)
-{
-    if(lcdObj == NULL || lcdObj->gpioObj == NULL)
-        return;
-    
-    gpio_bits_reset(lcdObj->gpioObj->sckPort, lcdObj->gpioObj->sckPin);
 }
 
 
@@ -275,15 +220,11 @@ static void lcd_blk_disable(LCD_OBJ_T * const lcdObj)
 */
 static void send_byte_to_lcd(LCD_OBJ_T * const lcdObj, const uint8_t byte)
 {
-    if(lcdObj == NULL || lcdObj->gpioObj == NULL)
+    if(lcdObj == NULL || lcdObj->spi == NULL)
         return;
     
-    for(uint8_t i = 0; i < 8; i++)
-    {
-        lcd_sck_low(lcdObj);
-        byte << i & 0x80 ? lcd_mosi_high(lcdObj) : lcd_mosi_low(lcdObj);
-        lcd_sck_high(lcdObj);
-    }
+    while(!spi_i2s_flag_get(lcdObj->spi, SPI_I2S_TDBE_FLAG));
+    spi_i2s_data_transmit(lcdObj->spi, byte);
 }
 
 
@@ -296,7 +237,7 @@ static void send_byte_to_lcd(LCD_OBJ_T * const lcdObj, const uint8_t byte)
 */
 static void send_cmd_to_lcd(LCD_OBJ_T * const lcdObj, const uint8_t cmd)
 {
-    if(lcdObj == NULL || lcdObj->gpioObj == NULL)
+    if(lcdObj == NULL || lcdObj->gpioObj == NULL || lcdObj->spi == NULL)
         return;
     
     lcd_cs_enable(lcdObj);
@@ -317,7 +258,7 @@ static void send_cmd_to_lcd(LCD_OBJ_T * const lcdObj, const uint8_t cmd)
 */
 static void send_data_8bit_to_lcd(LCD_OBJ_T * const lcdObj, const uint8_t data)
 {
-    if(lcdObj == NULL || lcdObj->gpioObj == NULL)
+    if(lcdObj == NULL || lcdObj->gpioObj == NULL || lcdObj->spi == NULL)
         return;
     
     lcd_cs_enable(lcdObj);
@@ -338,7 +279,7 @@ static void send_data_8bit_to_lcd(LCD_OBJ_T * const lcdObj, const uint8_t data)
 */
 static void send_data_16bit_to_lcd(LCD_OBJ_T * const lcdObj, const uint16_t data)
 {
-    if(lcdObj == NULL || lcdObj->gpioObj == NULL)
+    if(lcdObj == NULL || lcdObj->gpioObj == NULL || lcdObj->spi == NULL)
         return;
     
     send_byte_to_lcd(lcdObj, data >> 8 & 0xFF);
@@ -354,7 +295,7 @@ static void send_data_16bit_to_lcd(LCD_OBJ_T * const lcdObj, const uint16_t data
 */
 void lcd_reset(LCD_OBJ_T * const lcdObj)
 {
-    if(lcdObj == NULL || lcdObj->gpioObj == NULL)
+    if(lcdObj == NULL || lcdObj->gpioObj == NULL || lcdObj->spi == NULL)
         return;
     
     lcd_res_disable(lcdObj);
@@ -376,7 +317,7 @@ void lcd_reset(LCD_OBJ_T * const lcdObj)
 */
 void lcd_power_on_code_init(LCD_OBJ_T * const lcdObj)
 {
-    if(lcdObj == NULL || lcdObj->gpioObj == NULL)
+    if(lcdObj == NULL || lcdObj->gpioObj == NULL || lcdObj->spi == NULL)
         return;
     
     lcd_blk_disable(lcdObj);
@@ -702,7 +643,7 @@ void lcd_power_on_code_init(LCD_OBJ_T * const lcdObj)
 */
 static void lcd_set_addr(LCD_OBJ_T * const lcdObj, const uint16_t xStart, const uint16_t yStart, const uint16_t xEnd, const uint16_t yEnd)
 {
-    if(lcdObj == NULL || lcdObj->gpioObj == NULL || xStart > xEnd || yStart > yEnd || xEnd >= lcdObj->width || yEnd >= lcdObj->height)
+    if(lcdObj == NULL || lcdObj->gpioObj == NULL || lcdObj->spi == NULL || xStart > xEnd || yStart > yEnd || xEnd >= lcdObj->width || yEnd >= lcdObj->height)
         return;
     
     //设置列地址
@@ -735,7 +676,7 @@ static void lcd_set_addr(LCD_OBJ_T * const lcdObj, const uint16_t xStart, const 
 */
 void lcd_fill(LCD_OBJ_T * const lcdObj, const uint16_t xStart, const uint16_t yStart, const uint16_t xEnd, const uint16_t yEnd, const uint16_t color)
 {
-    if(lcdObj == NULL || lcdObj->gpioObj == NULL || xStart > xEnd || yStart > yEnd || xEnd >= lcdObj->width || yEnd >= lcdObj->height)
+    if(lcdObj == NULL || lcdObj->gpioObj == NULL || lcdObj->spi == NULL || xStart > xEnd || yStart > yEnd || xEnd >= lcdObj->width || yEnd >= lcdObj->height)
         return;
     
     lcd_set_addr(lcdObj, xStart, yStart, xEnd, yEnd);
@@ -764,7 +705,7 @@ void lcd_fill(LCD_OBJ_T * const lcdObj, const uint16_t xStart, const uint16_t yS
 */
 void lcd_clear(LCD_OBJ_T * const lcdObj, const uint16_t bColor)
 {
-    if(lcdObj == NULL || lcdObj->gpioObj == NULL)
+    if(lcdObj == NULL || lcdObj->gpioObj == NULL || lcdObj->spi == NULL)
         return;
     
     lcd_fill(lcdObj, 0, 0, lcdObj->width - 1, lcdObj->height - 1, bColor);
@@ -791,13 +732,16 @@ void lcd_show_char(LCD_OBJ_T * const lcdObj, const uint16_t x, const uint16_t y,
     uint16_t chByteSize = 0;
     uint16_t xx = x, yy = y;
     
-    if(lcdObj == NULL || lcdObj->gpioObj == NULL || fontSorce == NULL || ch > 127 || xx >= lcdObj->width || yy >= lcdObj->height)
+    if(lcdObj == NULL || lcdObj->gpioObj == NULL || lcdObj->spi == NULL || fontSorce == NULL || ch > 127 || xx >= lcdObj->width || yy >= lcdObj->height)
         return;
     
     switch(fontSize)
     {
         case LCD_EN_FONT_SIZE_8X16:
             xSize = 8, ySize = 16;
+            break;
+        case LCD_EN_FONT_SIZE_16X16:
+            xSize = 16, ySize = 16;
             break;
         case LCD_EN_FONT_SIZE_16X24:
             xSize = 16, ySize = 24;
@@ -860,13 +804,16 @@ void lcd_show_str(LCD_OBJ_T * const lcdObj, const uint16_t x, const uint16_t y, 
     uint8_t xSize = 0, ySize = 0;
     uint16_t xx = x, yy = y;
     
-    if(lcdObj == NULL || lcdObj->gpioObj == NULL || fontSorce == NULL || str == NULL || xx >= lcdObj->width || yy >= lcdObj->height)
+    if(lcdObj == NULL || lcdObj->gpioObj == NULL || lcdObj->spi == NULL || fontSorce == NULL || str == NULL || xx >= lcdObj->width || yy >= lcdObj->height)
         return;
     
     switch(fontSize)
     {
         case LCD_EN_FONT_SIZE_8X16:
             xSize = 8, ySize = 16;
+            break;
+        case LCD_EN_FONT_SIZE_16X16:
+            xSize = 16, ySize = 16;
             break;
         case LCD_EN_FONT_SIZE_16X24:
             xSize = 16, ySize = 24;
@@ -901,11 +848,11 @@ void lcd_show_str(LCD_OBJ_T * const lcdObj, const uint16_t x, const uint16_t y, 
 
 
 /**
- * @brief   LCD显示数字
+ * @brief   LCD显示整数
  * @param   lcdObj:     LCD对象
  * @param   x:          横坐标
  * @param   y:          纵坐标
- * @param   num:        要显示的数字
+ * @param   integer:    要显示的整数
  * @param   format:     显示格式
  * @param   fontSize:   字体大小
  * @param   fontSorce:  字库
@@ -914,21 +861,24 @@ void lcd_show_str(LCD_OBJ_T * const lcdObj, const uint16_t x, const uint16_t y, 
  * @retval  None
  * @note    None
 */
-void lcd_show_num(LCD_OBJ_T * const lcdObj, const uint16_t x, const uint16_t y, const uint32_t num, const char * const format, const LCD_EN_FONT_SIZE_T fontSize,
-    const uint8_t * const fontSorce, const uint16_t fColor, const uint16_t bColor)
+void lcd_show_integer(LCD_OBJ_T * const lcdObj, const uint16_t x, const uint16_t y, const uint32_t integer, const char * const format,
+    const LCD_EN_FONT_SIZE_T fontSize, const uint8_t * const fontSorce, const uint16_t fColor, const uint16_t bColor)
 {
     uint8_t xSize = 0, ySize = 0;
     uint16_t xx = x, yy = y;
     uint8_t str[20] = {0};
     uint8_t *pStr = str;
     
-    if(lcdObj == NULL || lcdObj->gpioObj == NULL || fontSorce == NULL || xx >= lcdObj->width || yy >= lcdObj->height)
+    if(lcdObj == NULL || lcdObj->gpioObj == NULL || lcdObj->spi == NULL || fontSorce == NULL || xx >= lcdObj->width || yy >= lcdObj->height)
         return;
     
     switch(fontSize)
     {
         case LCD_EN_FONT_SIZE_8X16:
             xSize = 8, ySize = 16;
+            break;
+        case LCD_EN_FONT_SIZE_16X16:
+            xSize = 16, ySize = 16;
             break;
         case LCD_EN_FONT_SIZE_16X24:
             xSize = 16, ySize = 24;
@@ -944,7 +894,7 @@ void lcd_show_num(LCD_OBJ_T * const lcdObj, const uint16_t x, const uint16_t y, 
             break;
     }
     
-    sprintf((char *)str, format, num);
+    sprintf((char *)str, format, integer);
     
     while(*pStr)
     {
@@ -957,7 +907,75 @@ void lcd_show_num(LCD_OBJ_T * const lcdObj, const uint16_t x, const uint16_t y, 
         if(yy + ySize > LCD_HEIGHT)
             yy = 0;
         
-        lcd_show_char(lcdObj, xx, yy, *pStr == ' ' ? 0 : *pStr - '0' + 1, fontSize, fontSorce, fColor, bColor);
+        lcd_show_char(lcdObj, xx, yy, *pStr == ' ' ? 0 : *pStr - '0' + 2, fontSize, fontSorce, fColor, bColor);
+        
+        xx += xSize;
+        pStr++;
+    }
+}
+
+
+/**
+ * @brief   LCD显示浮点数
+ * @param   lcdObj:     LCD对象
+ * @param   x:          横坐标
+ * @param   y:          纵坐标
+ * @param   floatNum:   要显示的浮点数
+ * @param   format:     显示格式
+ * @param   fontSize:   字体大小
+ * @param   fontSorce:  字库
+ * @param   fColor:     字体颜色
+ * @param   bColor:     背景颜色
+ * @retval  None
+ * @note    None
+*/
+void lcd_show_float(LCD_OBJ_T * const lcdObj, const uint16_t x, const uint16_t y, const double floatNum, const char * const format,
+    const LCD_EN_FONT_SIZE_T fontSize, const uint8_t * const fontSorce, const uint16_t fColor, const uint16_t bColor)
+{
+    uint8_t xSize = 0, ySize = 0;
+    uint16_t xx = x, yy = y;
+    uint8_t str[20] = {0};
+    uint8_t *pStr = str;
+    
+    if(lcdObj == NULL || lcdObj->gpioObj == NULL || lcdObj->spi == NULL || fontSorce == NULL || xx >= lcdObj->width || yy >= lcdObj->height)
+        return;
+    
+    switch(fontSize)
+    {
+        case LCD_EN_FONT_SIZE_8X16:
+            xSize = 8, ySize = 16;
+            break;
+        case LCD_EN_FONT_SIZE_16X16:
+            xSize = 16, ySize = 16;
+            break;
+        case LCD_EN_FONT_SIZE_16X24:
+            xSize = 16, ySize = 24;
+            break;
+        case LCD_EN_FONT_SIZE_16X32:
+            xSize = 16, ySize = 32;
+            break;
+        case LCD_EN_FONT_SIZE_24X32:
+            xSize = 24, ySize = 32;
+            break;
+        default:
+            xSize = 8, ySize = 16;
+            break;
+    }
+    
+    sprintf((char *)str, format, floatNum);
+    
+    while(*pStr)
+    {
+        if(xx + xSize > LCD_WIDTH)
+        {
+            xx = 0;
+            yy += ySize;
+        }
+        
+        if(yy + ySize > LCD_HEIGHT)
+            yy = 0;
+        
+        lcd_show_char(lcdObj, xx, yy, *pStr == ' ' ? 0 : (*pStr == '.' ? 1 : *pStr - '0' + 2), fontSize, fontSorce, fColor, bColor);
         
         xx += xSize;
         pStr++;
@@ -980,7 +998,7 @@ void lcd_show_num(LCD_OBJ_T * const lcdObj, const uint16_t x, const uint16_t y, 
 void lcd_show_picture(LCD_OBJ_T * const lcdObj, const uint16_t x, const uint16_t y, const uint16_t picWidth, const uint16_t picHeight,
     const uint8_t * const picData, const uint16_t picDataSize)
 {
-    if(lcdObj == NULL || lcdObj->gpioObj == NULL || picData == NULL || x >= lcdObj->width || y >= lcdObj->height ||
+    if(lcdObj == NULL || lcdObj->gpioObj == NULL || lcdObj->spi == NULL || picData == NULL || x >= lcdObj->width || y >= lcdObj->height ||
         x + picWidth > lcdObj->width || y + picHeight > lcdObj->height)
         return;
     

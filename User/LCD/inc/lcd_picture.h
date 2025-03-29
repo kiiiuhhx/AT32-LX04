@@ -7,7 +7,7 @@
 
 #include "stdint.h"
 
-//神武Logo
-extern const uint8_t lcdPicSuenwLogo95x40[7600];
+//鞠婧祎
+extern const uint8_t lcdPicJujingyi71x40[5680];
 
 #endif //__LCD_PICTURE_H

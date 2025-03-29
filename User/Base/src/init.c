@@ -49,6 +49,7 @@ void system_init(void)
     crm_periph_clock_enable(CRM_GPIOB_PERIPH_CLOCK, TRUE);
     crm_periph_clock_enable(CRM_GPIOC_PERIPH_CLOCK, TRUE);
     crm_periph_clock_enable(CRM_GPIOF_PERIPH_CLOCK, TRUE);
+    crm_periph_clock_enable(CRM_SPI1_PERIPH_CLOCK, TRUE);
     crm_periph_clock_enable(CRM_SPI2_PERIPH_CLOCK, TRUE);
     crm_periph_clock_enable(CRM_TMR1_PERIPH_CLOCK, TRUE);
     crm_periph_clock_enable(CRM_TMR6_PERIPH_CLOCK, TRUE);
@@ -82,7 +83,7 @@ void init_task(void *arg)
     xTaskCreate(adc_task, "adc_task", 64, NULL, 6, &adcTaskHandle);
     xTaskCreate(beep_task, "beep_task", 64, NULL, 6, &beepTaskHandle);
     xTaskCreate(key_task, "key_task", 64, NULL, 5, &keyTaskHandle);
-    xTaskCreate(lcd_task, "lcd_task", 128, NULL, 6, &lcdTaskHandle);
+    xTaskCreate(lcd_task, "lcd_task", 128, NULL, 7, &lcdTaskHandle);
     xTaskCreate(led_task, "led_task", 64, NULL, 4, &ledTaskHandle);
     xTaskCreate(pwm_task, "pwm_task", 64, NULL, 3, &pwmTaskHandle);
     xTaskCreate(rs485_task, "rs485_task", 64, NULL, 6, &rs485TaskHandle);
